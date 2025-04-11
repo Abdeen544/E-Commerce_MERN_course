@@ -21,6 +21,15 @@ interface UpdateCartParams{
     userID: string,
 }
 
+interface ClearCartParams{
+    userID: string
+}
+
+interface DeleteCartParams{
+    productID: any,
+    userID: string,
+}
+
 const createCartForUser = async ({userID}: createCartParams) => {
     const cart = await cartModel.create({userID, totalAmount: 0});
     await cart.save();
@@ -90,6 +99,36 @@ export const updateItemInCart = async ({userID, productID, quantity}: UpdateCart
     const otherItemsInCart = cart.items.filter(p=>{p.product.toString() !== productID});
 
     cart.totalAmount = otherItemsInCart.reduce((sum, p) => p.quantity * p.unitPrice, 0) + existsInCart.quantity * existsInCart.unitPrice;
+
+    const updatedCart = await cart.save();
+
+    return {data: updatedCart, statusCode: 200};
+}
+
+export const clearCart = async ({userID}: ClearCartParams) => {
+    const cart = await getActiveCartForUser({userID});
+
+    cart.items = [];
+    cart.totalAmount = 0;
+    
+    const updatedCart = await cart.save();
+
+    return {data: updatedCart, statusCode: 200};
+}
+
+export const deleteItemInCart = async ({userID, productID}: DeleteCartParams) => {
+    const cart = await getActiveCartForUser({userID});
+
+    const existsInCart = cart.items.find(p=>p.product.toString() === productID);
+
+    if(!existsInCart){
+        return {data: "Items doesn't exist in cart!", statusCode: 400}
+    }
+
+    const otherItemsInCart = cart.items.filter(p=>{p.product.toString() !== productID});
+
+    cart.items = otherItemsInCart;
+    cart.totalAmount = otherItemsInCart.reduce((sum, p) => p.quantity * p.unitPrice, 0)
 
     const updatedCart = await cart.save();
 
