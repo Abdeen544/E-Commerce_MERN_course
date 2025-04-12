@@ -6,6 +6,7 @@ import userRoute from "./routes/userRoute";
 import { seedInitialProducts } from "./services/productService";
 import productRoute from "./routes/productRoutes";
 import cartRoute from "./routes/cartRoute";
+import cors from "cors";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const app = express();
 const port = 3001;
 
 app.use(express.json());
+app.use(cors());
 
 mongoose.connect(process.env.DATABASE_URL || "").then(()=>{console.log("MongoDB connect")}).catch(err=>{console.log("failed to connect", err)});
 
