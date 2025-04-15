@@ -45,9 +45,10 @@ const LoginPage = () => {
         }
         setError("");
 
-        const tokenText = await response.text();
+        // const tokenText = await response.json();
+        // const token = JSON.stringify(tokenText);
 
-        const token = JSON.stringify(tokenText);
+        const token = await response.json();
 
         if(!token){
             setError("Incorrect token!");
