@@ -3,7 +3,7 @@ import Container from "@mui/material/Container"
 import ProductCard from "../components/ProductCard"
 import { useEffect, useState } from "react"
 import { Product } from "../types/Products"
-import { Box } from "@mui/material"
+import Box from "@mui/material/Box"
 import { BASE_URL } from "../constants/baseURL"
 
 const HomePage = () => {

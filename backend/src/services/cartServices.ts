@@ -7,7 +7,8 @@ interface createCartParams{
 }
 
 interface activeCartParams{
-    userID: string
+    userID: string,
+    populateProduct?: boolean
 }
 
 interface AddCartParams{
@@ -42,8 +43,15 @@ const createCartForUser = async ({userID}: createCartParams) => {
     return cart;
 }
 
-export const getActiveCartForUser = async ({userID}: activeCartParams) => {
-    let cart = await cartModel.findOne({userID, status: "active"});
+export const getActiveCartForUser = async ({userID, populateProduct}: activeCartParams) => {
+    let cart;
+
+    if(populateProduct){
+        cart = await cartModel.findOne({userID, status: "active"}).populate('items.product');
+    } else {
+        cart = await cartModel.findOne({userID, status: "active"});
+    }
+
     if(!cart){
         cart = await createCartForUser({userID});
     }
@@ -75,10 +83,10 @@ export const addItemToCart = async ({productID, quantity, userID}: AddCartParams
 
     //Update total number of items
     cart.totalAmount += product.price * quantity
+    
+    await cart.save();
 
-    const updateCart = await cart.save();
-
-    return {data: updateCart, statusCode: 200};
+    return {data: await getActiveCartForUser({userID, populateProduct: true}), statusCode: 200};
 }
 
 export const updateItemInCart = async ({userID, productID, quantity}: UpdateCartParams) => {
@@ -105,10 +113,10 @@ export const updateItemInCart = async ({userID, productID, quantity}: UpdateCart
     const otherItemsInCart = cart.items.filter(p=>{p.product.toString() !== productID});
 
     cart.totalAmount = otherItemsInCart.reduce((sum, p) => p.quantity * p.unitPrice, 0) + existsInCart.quantity * existsInCart.unitPrice;
+    
+    await cart.save();
 
-    const updatedCart = await cart.save();
-
-    return {data: updatedCart, statusCode: 200};
+    return {data: await getActiveCartForUser({userID, populateProduct: true}), statusCode: 200};
 }
 
 export const clearCart = async ({userID}: ClearCartParams) => {
@@ -138,7 +146,7 @@ export const deleteItemInCart = async ({userID, productID}: DeleteCartParams) =>
 
     const updatedCart = await cart.save();
 
-    return {data: updatedCart, statusCode: 200};
+    return {data: await getActiveCartForUser({userID, populateProduct: true}), statusCode: 200};
 }
 
 export const checkout = async ({userID, address}: CheckoutParams) => {
